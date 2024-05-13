@@ -43,8 +43,8 @@
 ;==========
 main:
 init_prog:
-  push outfile
   push mode_write
+  push outfile
   call fopen
   add esp, 8
   mov ebx, err_open
@@ -114,8 +114,8 @@ exit:
 ; eax - read bytes
 read_file_into:
   ; open file
-  push esi
   push mode_read
+  push esi
   call fopen
   add esp, 8
   mov ebx, err_open
@@ -126,10 +126,10 @@ read_file_into:
   pop ecx ; buf size
 
   ; read file
-  push edi
-  push ecx
-  push dword 1
   push eax
+  push dword 1
+  push ecx
+  push edi
   call fread
   mov ebx, eax
   pop eax
@@ -294,8 +294,8 @@ exec_op_zext: ; bl = dest; bh = src
 ;==========
 exec_op_append: ; bl = char reg
   movzx ebx, bl
-  push ebx
   push dword [prog_outf]
+  push ebx
   call fputc
   add esp, 8
 
