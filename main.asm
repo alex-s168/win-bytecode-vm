@@ -110,10 +110,10 @@ exitproc:
 ; stack (dword) - buffer size
 ;rets 
 ; eax - read bytes
+;clobs
+; ebx
+; ecx
 read_file_into:
-  push ebx
-  push ecx
-
   ; open file
   push mode_read
   push esi
@@ -140,9 +140,6 @@ read_file_into:
   call fclose
 
   mov eax, ebx
-
-  pop ecx
-  pop ebx
 
   ret
 ;==========
