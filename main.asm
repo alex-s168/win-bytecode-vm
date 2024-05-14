@@ -37,6 +37,7 @@
   extern putchar
   extern fputc
   extern getchar
+  extern exit
 
   section .text
 
@@ -76,8 +77,7 @@ exec:
   mov ax, [prog_buf + esi] ; (arg0, arg1)
 
   sub edi, ';'
-  shl edi, 2
-  mov edi, [exec_lut + edi]
+  mov edi, [exec_lut + edi * 4]
 
   mov ebx, err_instr
   test edi, edi
@@ -87,32 +87,33 @@ exec:
   jmp edi
 ;==========
 
-;==========
-  mov eax, 0
-exit:
-  push eax
+;======================
+;======================
 
+;==========
+exitproc:
   ; close file
-  mov eax, [prog_outf]
-  push eax
+  push dword [prog_outf]
   call fclose
   add esp, 4
 
-  pop eax
-  ret
+  push eax
+  call exit
+
+.loop:
+  jmp .loop
 ;==========
 
-;======================
-;======================
-
 ;==========
-;args
 ; esi - file name
 ; edi - buffer ptr
 ; stack (dword) - buffer size
 ;rets 
 ; eax - read bytes
 read_file_into:
+  push ebx
+  push ecx
+
   ; open file
   push mode_read
   push esi
@@ -124,6 +125,7 @@ read_file_into:
   ; file handle in eax
 
   pop ecx ; buf size
+  push eax
 
   ; read file
   push eax
@@ -131,16 +133,17 @@ read_file_into:
   push ecx
   push edi
   call fread
+  add esp, 16
   mov ebx, eax
-  pop eax
-  add esp, 12
 
-  ; close file
-  push eax
+  ; handle on stack
   call fclose
-  add esp, 4
 
   mov eax, ebx
+
+  pop ecx
+  pop ebx
+
   ret
 ;==========
 
@@ -151,13 +154,13 @@ error: ; ebx = error string 0 terminated
   add esp, 4
 
   mov eax, 1
-  jmp exit
+  jmp exitproc
 ;==========
 
 ;==========
 exec_op_exit: ; bl = exit code; bh =
   movzx eax, bl
-  jmp exit
+  jmp exitproc
 ;==========
 
 ;==========
@@ -333,9 +336,7 @@ exec_op_index: ; bl = out reg; bh = index reg
 ;=======================================
 ;==                DATA               ==
 ;=======================================
-
-; for debugging purposes (in disassembly view)
-dw 0xDADA, 0
+  section .data
 
 ;==========
 file:
